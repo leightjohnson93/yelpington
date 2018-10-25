@@ -1,18 +1,15 @@
-<script>
-let name = document.location.pathname.slice(1);
+<!DOCTYPE html>
+<html lang="en">
 
-if (!name) {
-  console.log("no place name specfied");
-} else {
-  console.log("fetching place named '" + name + "'");
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="main.js"></script>
+  <title>Yelpington</title>
+</head>
 
-  fetch(name + '.json')
-    .then(function (response) {
-      return response.text();
-    })
-    .then(function (myText) {
-      console.log(myText);
-    });
-}
+<body>
+</body>
 
-</script>
+</html>
