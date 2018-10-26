@@ -1,32 +1,21 @@
 let mymap;
+let markerArray = [];
 
-const fetchRestaurant = async () => {
-  // if (marker) marker.clearLayers();
+const handleRequest = async () => {
   const restaurant = document.location.hash.slice(1);
   if (!restaurant) {
     await renderHome();
   } else {
-    document.querySelector("#restaurants").innerHTML = "";
-    const response = await fetch(`${restaurant}.json`);
-    const data = await response.json();
-    const { id, name, notes, ...info } = data;
-
-    document.querySelector("button").removeAttribute("hidden");
-    document.querySelector("#name").textContent = name;
-    document.querySelector("#info").innerHTML =
-      "Information" +
-      Object.keys(info)
-        .map(
-          key => `<li>${key[0].toUpperCase() + key.slice(1)}: ${info[key]}</li>`
-        )
-        .join("");
-    document.querySelector("#notes").innerHTML =
-      "Reviews" + notes.map(note => `<li>${note}</li>`).join("");
+    const data = await renderRestaurant(restaurant);
     renderMap(data);
   }
 };
 
 const renderMap = async data => {
+  if (markerArray.length && mymap) {
+    markerArray.forEach(marker => mymap.removeLayer(marker));
+  }
+  markerArray = [];
   const response = await fetch(
     `https://nominatim.openstreetmap.org/search.php?q=${encodeURI(
       data.address
@@ -36,6 +25,7 @@ const renderMap = async data => {
   const { lat, lon } = location[0];
   if (!mymap) mymap = L.map("mapid").setView([lat, lon], 17);
   const marker = L.marker([lat, lon]).addTo(mymap);
+  markerArray.push(marker);
   marker.bindPopup(data.name).openPopup();
   L.tileLayer(
     "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibmJlbmd0MTQiLCJhIjoiY2pqbXd1cjR3MTZlZDN2bWY3bXExN3h3eSJ9.c7bOXSuFkNWpA4GutuYkhw",
@@ -52,12 +42,15 @@ const renderMap = async data => {
 const renderHome = async () => {
   const response = await fetch(`all.json`);
   const restaurants = await response.json();
+  document.querySelector("#name").innerHTML = "";
+  document.querySelector("#info").innerHTML = "";
+  document.querySelector("#notes").innerHTML = "";
   document.querySelector("#restaurants").innerHTML =
     "Restaurants" +
     restaurants
       .map(
         restaurant =>
-          `<li onclick="setTimeout(fetchRestaurant,100)"><a href="#${restaurant}">${restaurant}</a></li>`
+          `<li onclick="setTimeout(handleRequest,100)"><a href="#${restaurant}">${restaurant}</a></li>`
       )
       .join("");
   document.querySelector("button").setAttribute("hidden", "");
@@ -73,9 +66,11 @@ const renderHome = async () => {
       return data[0];
     })
   );
+
   data.map(location => {
     const { lat, lon } = location;
     const marker = L.marker([lat, lon]).addTo(mymap);
+    markerArray.push(marker);
   });
 };
 
@@ -90,4 +85,22 @@ const fetchLocations = restaurants => {
   return locations;
 };
 
-fetchRestaurant();
+handleRequest();
+async function renderRestaurant(restaurant) {
+  document.querySelector("#restaurants").innerHTML = "";
+  const response = await fetch(`${restaurant}.json`);
+  const data = await response.json();
+  const { id, name, notes, ...info } = data;
+  document.querySelector("button").removeAttribute("hidden");
+  document.querySelector("#name").textContent = name;
+  document.querySelector("#info").innerHTML =
+    "Information" +
+    Object.keys(info)
+      .map(
+        key => `<li>${key[0].toUpperCase() + key.slice(1)}: ${info[key]}</li>`
+      )
+      .join("");
+  document.querySelector("#notes").innerHTML =
+    "Reviews" + notes.map(note => `<li>${note}</li>`).join("");
+  return data;
+}
