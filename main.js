@@ -8,6 +8,7 @@ const handleRequest = async () => {
   } else {
     const data = await renderRestaurant(restaurant);
     renderMap(data);
+    renderComments();
   }
 };
 
@@ -66,7 +67,6 @@ const renderHome = async () => {
       return data[0];
     })
   );
-
   data.map(location => {
     const { lat, lon } = location;
     const marker = L.marker([lat, lon]).addTo(mymap);
@@ -86,6 +86,7 @@ const fetchLocations = restaurants => {
 };
 
 handleRequest();
+
 async function renderRestaurant(restaurant) {
   document.querySelector("#restaurants").innerHTML = "";
   const response = await fetch(`${restaurant}.json`);
@@ -104,3 +105,19 @@ async function renderRestaurant(restaurant) {
     "Reviews" + notes.map(note => `<li>${note}</li>`).join("");
   return data;
 }
+
+handleClick = () => {
+  const comment = document.querySelector("textarea");
+  const commentList = document.querySelector("#comments");
+  const currentComment = `comment-${Date.now()}`;
+  localStorage.setItem(currentComment, comment.value);
+  comment.value = "";
+  commentList.innerHTML += `<li>${localStorage.getItem(currentComment)}</li>`;
+};
+
+renderComments = () => {
+  const commentList = document.querySelector("#comments");
+  commentList.innerHTML = Object.values(localStorage)
+    .map(comment => `<li>${comment}</li>`)
+    .join("");
+};
